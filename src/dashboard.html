@@ -480,7 +480,7 @@
     const row = r.row_data || {};
     const memType = row.type || r.source_type || 'unknown';
     const meta = TYPE_META[memType] || DEFAULT_META;
-    const score = r.score ? Math.round(r.score * 100) : 0;
+    const score = r.score ? Math.round(r.score > 1 ? r.score : r.score * 100) : 0;
 
     const time = r.timestamp ? new Date(r.timestamp).toLocaleString('zh-CN', {
       month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'

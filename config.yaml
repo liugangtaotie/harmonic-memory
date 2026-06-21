@@ -64,7 +64,7 @@ search:
     keyword_weight: 1.0
     vector_weight: 0.7
     fusion_k: 60
-  max_results: 50
+  max_results: 500
 
 logging:
   level: "INFO"

@@ -352,6 +352,24 @@
     } catch(e) {}
   }
 
+  // ── Debounce utility ──
+  function debounce(fn, ms) {
+    let timer;
+    return function(...args) {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn.apply(this, args), ms);
+    };
+  }
+
+  // ── Throttle utility ──
+  function throttle(fn, ms) {
+    let last = 0;
+    return function(...args) {
+      const now = Date.now();
+      if (now - last >= ms) { last = now; fn.apply(this, args); }
+    };
+  }
+
   // ── Search clear ──
   const si = document.getElementById('searchInput');
   const sc = document.getElementById('searchClear');
@@ -374,15 +392,25 @@
     resetAndSearch(currentQuery);
   });
 
-  // ── Search ──
+  // ── Search: Enter for immediate, debounce for type-ahead ──
   si.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       const q = e.target.value.trim();
       currentQuery = q;
       sh.style.display = 'none';
       resetAndSearch(q);
+      // Cancel any pending debounced search
+      if (si._debounceTimer) clearTimeout(si._debounceTimer);
     }
   });
+  // Debounced search as user types (300ms after last keystroke)
+  si.addEventListener('input', debounce(() => {
+    const q = si.value.trim();
+    if (q === currentQuery) return;
+    currentQuery = q;
+    sh.style.display = q ? 'none' : '';
+    resetAndSearch(q);
+  }, 300));
 
   function resetAndSearch(q) {
     currentOffset = 0; totalResults = 0; allResults = [];
@@ -486,14 +514,17 @@
     return div.innerHTML;
   }
 
-  // ── Infinite scroll ──
+  // ── Infinite scroll (throttled) ──
   const sentinel = document.createElement('div');
   sentinel.style.cssText = 'height:1px';
   document.body.appendChild(sentinel);
-  const observer = new IntersectionObserver(entries => {
-    if (entries[0].isIntersecting && !isLoading && allResults.length < totalResults) {
+  const loadMore = throttle(() => {
+    if (!isLoading && allResults.length < totalResults) {
       doSearch(currentQuery, currentOffset);
     }
+  }, 500);
+  const observer = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting) loadMore();
   }, { rootMargin: '400px' });
   observer.observe(sentinel);
 

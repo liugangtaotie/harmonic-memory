@@ -196,21 +196,19 @@ async def search_unified(
     Supports pagination via offset/limit for infinite scroll.
     """
     t0 = time.time()
-    raw = unified_search_fn(query=q, max_per_source=limit)
+    # Pass offset through to SQL so infinite scroll can reach all pages.
+    # max_per_source = page size; a separate COUNT gives the true total.
+    raw = unified_search_fn(query=q, max_per_source=limit, offset=offset)
 
     # Apply optional source/type filter
     if source:
-        # source filter checks source_type or row_data.type
         raw["results"] = [
             r for r in raw["results"]
             if r.get("source_type") == source
             or (r.get("row_data") or {}).get("type") == source
         ]
-        raw["total"] = len(raw["results"])
 
-    total = raw["total"]
-    # Apply pagination slice
-    raw["results"] = raw["results"][offset:offset + limit]
+    total = raw.get("total", len(raw["results"]))
     raw["latency_ms"] = int((time.time() - t0) * 1000)
 
     return UnifiedSearchResponse(

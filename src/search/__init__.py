@@ -115,7 +115,7 @@ def _format_memory_hit(m: dict) -> dict:
     }
 
 
-def unified_search(query: str, max_per_source: int = 30) -> dict[str, Any]:
+def unified_search(query: str, max_per_source: int = 30, offset: int = 0) -> dict[str, Any]:
     """Search structured memories (SQLite FTS5) + mem0 vector.
 
     Returns:
@@ -123,18 +123,21 @@ def unified_search(query: str, max_per_source: int = 30) -> dict[str, Any]:
         counts per source, total, and latency.
     """
     t0 = time.time()
+    total_count = 0
 
     # 1. Structured memories (SQLite)
     if query.strip():
         memory_hits = _search_memories_table(query, max_hits=max_per_source)
+        total_count = len(memory_hits)
     else:
         # Empty query -> return all recent memories
         from ..db.sqlite import MemoryDB
         db = MemoryDB()
         db.init_schema()
+        total_count = db.conn.execute("SELECT COUNT(*) FROM memories").fetchone()[0]
         rows = db.conn.execute(
-            "SELECT * FROM memories ORDER BY created_at DESC LIMIT ?",
-            (max_per_source,),
+            "SELECT * FROM memories ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            (max_per_source, offset),
         ).fetchall()
         memory_hits = [db._row_to_dict(r) for r in rows]
 
@@ -179,8 +182,8 @@ def unified_search(query: str, max_per_source: int = 30) -> dict[str, Any]:
 
     return {
         "query": query,
-        "results": all_results[:50],
-        "total": len(all_results),
+        "results": all_results,
+        "total": total_count or len(all_results),
         "sources": {
             "structured_memory": len(memory_hits),
             "mem0_vector": len(mem0_hits),

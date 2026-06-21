@@ -9,6 +9,7 @@ from qdrant_client.models import (
     PointStruct,
     VectorParams,
     ScoredPoint,
+    SearchRequest,
 )
 from qdrant_client.http.exceptions import UnexpectedResponse
 
@@ -109,7 +110,7 @@ class MemoryQdrant:
         """Batch search for multiple query vectors."""
         try:
             searches = [
-                models.SearchRequest(
+                SearchRequest(
                     vector=v,
                     limit=limit,
                 )

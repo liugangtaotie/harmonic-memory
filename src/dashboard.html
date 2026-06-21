@@ -5,172 +5,183 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="color-scheme" content="dark">
 <title>Harmonic Memory</title>
 <style>
   :root {
-    --bg: #05070f;
-    --surface: #0b0f1d;
-    --surface2: #111627;
-    --border: rgba(255,255,255,0.05);
-    --border-active: rgba(255,255,255,0.1);
-    --text: #e4e8f4;
-    --text2: #949db8;
-    --text3: #5a6480;
-    --accent: #7b93ff;
-    --accent-dim: rgba(123,147,255,0.1);
-    --green: #4ce4c8;
-    --green-dim: rgba(76,228,200,0.1);
-    --gold: #f5c842;
-    --gold-dim: rgba(245,200,66,0.1);
-    --rose: #f48f9e;
-    --rose-dim: rgba(244,143,158,0.1);
-    --purple: #b4a5f8;
-    --purple-dim: rgba(180,165,248,0.1);
-    --blue: #7dc4f8;
-    --blue-dim: rgba(125,196,248,0.1);
-    --radius: 16px;
-    --radius-sm: 10px;
-    --radius-xs: 6px;
+    --bg: #0e0c09;
+    --surface: #171410;
+    --surface2: #1f1b15;
+    --border: rgba(255,255,255,0.055);
+    --text: #e4dbcb;
+    --text2: #9f9582;
+    --text3: #6b6153;
+    --accent: #c4a35a;
+    --accent-dim: rgba(196,163,90,0.08);
+    --ink-fact: #8ea4b8;
+    --ink-preference: #c49e5e;
+    --ink-decision: #8d9e8a;
+    --ink-procedure: #7d9698;
+    --ink-event: #b08b8b;
+    --ink-concept: #9d92a8;
+    --ink-question: #a09888;
+    --radius: 2px;
+    --radius-sm: 6px;
     --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
     --ease-out: cubic-bezier(0, 0, 0.2, 1);
   }
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-  html, body { height: 100%; background: var(--bg); }
+  html { background: var(--bg); }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    font-family: system-ui, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
     color: var(--text);
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
     line-height: 1.5;
+    background: var(--bg);
+    max-width: 640px;
+    margin: 0 auto;
   }
 
   /* ── Header ── */
   .app-header {
     position: sticky; top: 0; z-index: 20;
-    background: rgba(5,7,15,0.88); backdrop-filter: blur(24px) saturate(1.4);
-    -webkit-backdrop-filter: blur(24px) saturate(1.4);
-    border-bottom: 1px solid var(--border);
-    padding: 10px 16px 8px;
+    background: rgba(14,12,9,0.9); backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 10px 16px 0;
     padding-top: max(10px, env(safe-area-inset-top));
   }
   .header-top {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 8px;
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 10px;
   }
   .logo {
-    font-size: 19px; font-weight: 800; letter-spacing: -0.4px;
-    background: linear-gradient(135deg, #9db4ff 0%, var(--accent) 30%, var(--green) 100%);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 18px; font-weight: 450; letter-spacing: 0.02em;
+    color: var(--text);
+    font-feature-settings: "ss02", "cv05";
   }
-  .header-meta {
-    font-size: 11px; color: var(--text3);
-    display: flex; align-items: center; gap: 6px;
+  .logo em { font-style: normal; color: var(--text3); font-weight: 350; }
+  .stat-text {
+    font-size: 11px; color: var(--text3); font-feature-settings: "tnum";
+    letter-spacing: 0.01em;
   }
-  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
-  .dot.pulse { animation: pulse 2s ease-in-out infinite; }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
   /* ── Search ── */
+  .search-outer { padding: 0 16px 10px; }
   .search-wrap {
-    display: flex; gap: 0;
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); overflow: hidden;
-    transition: border-color 0.25s, box-shadow 0.25s;
+    display: flex; align-items: center; gap: 0;
+    background: var(--surface); border: 1px solid var(--border);
+    transition: border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
   }
   .search-wrap:focus-within {
-    border-color: rgba(123,147,255,0.35);
-    box-shadow: 0 0 0 3px rgba(123,147,255,0.08);
-  }
-  .search-icon {
-    display: flex; align-items: center; padding-left: 14px; color: var(--text3);
-    font-size: 14px; user-select: none;
+    border-color: rgba(196,163,90,0.3);
+    box-shadow: 0 0 0 3px rgba(196,163,90,0.05);
   }
   .search-input {
     flex: 1; background: none; border: none; outline: none;
-    color: var(--text); font-size: 15px; padding: 11px 10px 11px 8px;
-    font-family: inherit;
+    color: var(--text); font-size: 15px; padding: 10px 12px 10px 14px;
+    font-family: inherit; letter-spacing: 0.01em;
   }
   .search-input::placeholder { color: var(--text3); }
   .search-clear {
     display: none; align-items: center; justify-content: center;
-    width: 32px; background: none; border: none; color: var(--text3);
-    font-size: 16px; cursor: pointer; flex-shrink: 0;
+    width: 34px; height: 34px; background: none; border: none;
+    color: var(--text3); font-size: 15px; cursor: pointer; flex-shrink: 0;
+    font-family: inherit; line-height: 1;
   }
   .search-clear.visible { display: flex; }
+  .search-hint {
+    font-size: 10px; color: var(--text3); padding: 5px 16px 0;
+    letter-spacing: 0.02em;
+  }
 
-  /* ── Chips ── */
+  /* ── Filters ── */
   .filter-row {
-    display: flex; gap: 6px; padding: 8px 16px 10px;
+    display: flex; gap: 0; padding: 0 16px 2px;
     overflow-x: auto; scrollbar-width: none;
     border-bottom: 1px solid var(--border);
   }
   .filter-row::-webkit-scrollbar { display: none; }
   .chip {
-    flex-shrink: 0; padding: 6px 14px; border-radius: 20px;
-    font-size: 12px; font-weight: 500; color: var(--text3);
-    background: transparent; border: 1px solid transparent;
+    flex-shrink: 0; padding: 7px 0 9px; margin-right: 16px;
+    font-size: 12px; font-weight: 450; color: var(--text3);
+    background: none; border: none; border-bottom: 2px solid transparent;
     cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    letter-spacing: 0.02em; font-family: inherit;
   }
   .chip.active {
-    color: var(--accent); background: var(--accent-dim);
-    border-color: rgba(123,147,255,0.15);
+    color: var(--text);
+    border-bottom-color: var(--accent);
   }
-  .chip:not(.active):active { color: var(--text2); background: var(--surface2); }
+  .chip:not(.active):hover { color: var(--text2); }
 
   /* ── Content ── */
-  .content { padding: 8px 16px 80px; min-height: 50vh; }
+  .content { padding: 0 16px 80px; min-height: 60vh; }
 
   /* Results bar */
   .results-bar {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 0 12px; font-size: 12px; color: var(--text3);
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 14px 0 10px; font-size: 11px; color: var(--text3);
+    letter-spacing: 0.02em;
   }
-  .results-bar .count { color: var(--text2); font-weight: 600; }
 
-  /* Cards */
-  .card-list { display: flex; flex-direction: column; gap: 10px; }
+  /* ── Cards ── */
+  .card-list { display: flex; flex-direction: column; gap: 1px; }
   .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 16px;
-    transition: border-color 0.2s, transform 0.2s;
-    animation: cardIn 0.4s var(--ease-out) both;
+    background: var(--surface);
+    padding: 16px 16px 16px 14px;
     position: relative; overflow: hidden;
+    animation: cardIn 0.45s var(--ease-out) both;
+    cursor: default;
   }
-  .card:active { border-color: var(--border-active); transform: scale(0.985); }
-  .card::after {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+  .card + .card { border-top: 1px solid var(--border); }
+  .card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    transition: width 0.2s var(--ease);
   }
+  .card:active::before { width: 4px; }
+  .card:active { background: var(--surface2); }
 
-  /* Type badge */
-  .card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-  .type-dot {
-    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  /* Type accent colors — left edge strip */
+  .card.type-fact::before        { background: var(--ink-fact); }
+  .card.type-preference::before  { background: var(--ink-preference); }
+  .card.type-decision::before    { background: var(--ink-decision); }
+  .card.type-procedure::before   { background: var(--ink-procedure); }
+  .card.type-event::before       { background: var(--ink-event); }
+  .card.type-concept::before     { background: var(--ink-concept); }
+  .card.type-question::before    { background: var(--ink-question); }
+  .card.type-relationship::before{ background: var(--ink-preference); }
+  .card.type-mem0_vector::before { background: var(--ink-concept); }
+  .card.type-default::before     { background: var(--text3); }
+
+  /* Card header */
+  .card-top {
+    display: flex; align-items: center; gap: 0; margin-bottom: 8px;
   }
   .type-label {
-    font-size: 11px; font-weight: 600; letter-spacing: 0.2px;
+    font-size: 10px; font-weight: 500; letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
-  .type-preference .type-dot { background: var(--gold); }
-  .type-preference .type-label { color: var(--gold); }
-  .type-fact .type-dot { background: var(--accent); }
-  .type-fact .type-label { color: var(--accent); }
-  .type-concept .type-dot { background: var(--purple); }
-  .type-concept .type-label { color: var(--purple); }
-  .type-procedure .type-dot { background: var(--green); }
-  .type-procedure .type-label { color: var(--green); }
-  .type-decision .type-dot { background: var(--rose); }
-  .type-decision .type-label { color: var(--rose); }
-  .type-event .type-dot { background: var(--blue); }
-  .type-event .type-label { color: var(--blue); }
-  .type-question .type-dot { background: var(--text3); }
-  .type-question .type-label { color: var(--text2); }
-  .type-relationship .type-dot { background: var(--gold); }
-  .type-relationship .type-label { color: var(--gold); }
-  .type-mem0_vector .type-dot { background: var(--purple); }
-  .type-mem0_vector .type-label { color: var(--purple); }
-  .type-default .type-dot { background: var(--text3); }
-  .type-default .type-label { color: var(--text3); }
+  .card.type-fact .type-label        { color: var(--ink-fact); }
+  .card.type-preference .type-label  { color: var(--ink-preference); }
+  .card.type-decision .type-label    { color: var(--ink-decision); }
+  .card.type-procedure .type-label   { color: var(--ink-procedure); }
+  .card.type-event .type-label       { color: var(--ink-event); }
+  .card.type-concept .type-label     { color: var(--ink-concept); }
+  .card.type-question .type-label    { color: var(--ink-question); }
+  .card.type-relationship .type-label{ color: var(--ink-preference); }
+  .card.type-mem0_vector .type-label { color: var(--ink-concept); }
+  .card.type-default .type-label     { color: var(--text3); }
+
+  .card-source {
+    font-size: 10px; color: var(--text3); font-weight: 400;
+    margin-left: auto; letter-spacing: 0.02em;
+  }
+  .card-time {
+    font-size: 10px; color: var(--text3); margin-left: 8px;
+    font-feature-settings: "tnum"; letter-spacing: 0.02em;
+  }
 
   /* Card body */
   .card-body {
@@ -178,121 +189,124 @@
     display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  .card-body strong { color: var(--text); font-weight: 600; }
 
   /* Card footer */
   .card-foot {
-    display: flex; align-items: center; gap: 8px; margin-top: 10px;
+    display: flex; align-items: center; gap: 6px; margin-top: 10px;
     flex-wrap: wrap;
   }
-  .card-time { font-size: 11px; color: var(--text3); }
-  .card-source {
-    font-size: 10px; color: var(--accent); font-weight: 500;
-    background: var(--accent-dim); padding: 2px 8px; border-radius: 4px;
-  }
   .kw-tag {
-    font-size: 10px; color: var(--text3); background: rgba(255,255,255,0.03);
-    padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border);
+    font-size: 10px; color: var(--text3); letter-spacing: 0.02em;
   }
-  .score-bar {
-    height: 2px; background: var(--border); border-radius: 1px;
-    margin-top: 8px; overflow: hidden;
-  }
-  .score-fill {
-    height: 100%; border-radius: 1px;
-    background: linear-gradient(90deg, var(--accent), var(--green));
-    transition: width 0.4s var(--ease);
+  .kw-tag::before { content: '#'; color: var(--text3); opacity: 0.5; }
+
+  /* Score indicator — subtle right-aligned */
+  .score-dot {
+    margin-left: auto; font-size: 9px; color: var(--text3);
+    font-feature-settings: "tnum"; letter-spacing: 0.02em;
   }
 
   /* ── Skeleton ── */
-  .skeleton { display: flex; flex-direction: column; gap: 10px; }
+  .skeleton { display: flex; flex-direction: column; }
   .sk-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 16px;
+    background: var(--surface); padding: 16px 16px 16px 14px;
+    position: relative;
+  }
+  .sk-card + .sk-card { border-top: 1px solid var(--border); }
+  .sk-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--border);
   }
   .sk-line {
-    height: 12px; background: var(--surface2); border-radius: 6px;
-    animation: shimmer 1.5s ease-in-out infinite;
+    height: 10px; background: var(--surface2); animation: shimmer 2s ease-in-out infinite;
   }
-  .sk-line.w60 { width: 60%; }
   .sk-line.w80 { width: 80%; }
-  .sk-line.w40 { width: 40%; }
-  .sk-line + .sk-line { margin-top: 10px; }
+  .sk-line.w50 { width: 50%; }
+  .sk-line.w30 { width: 30%; margin-top: 8px; }
+  .sk-line + .sk-line { margin-top: 8px; }
   @keyframes shimmer {
-    0%, 100% { opacity: 0.4; }
-    50% { opacity: 0.8; }
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.7; }
   }
 
   /* ── Empty ── */
   .empty-state { text-align: center; padding: 80px 20px; }
-  .empty-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.3; }
-  .empty-title { font-size: 16px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
-  .empty-desc { font-size: 13px; color: var(--text3); line-height: 1.6; }
+  .empty-mark {
+    font-size: 13px; color: var(--text3); letter-spacing: 0.06em;
+    text-transform: uppercase; margin-bottom: 20px;
+  }
+  .empty-title { font-size: 16px; font-weight: 450; color: var(--text2); margin-bottom: 6px; }
+  .empty-desc { font-size: 13px; color: var(--text3); line-height: 1.7; }
 
   /* ── Pull-to-refresh ── */
   .ptr {
-    position: fixed; top: -52px; left: 50%; transform: translateX(-50%);
-    z-index: 100; width: 38px; height: 38px;
+    position: fixed; top: -48px; left: 50%; transform: translateX(-50%);
+    z-index: 100; width: 32px; height: 32px;
     background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    transition: top 0.25s var(--ease); box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: top 0.25s var(--ease); box-shadow: 0 4px 16px rgba(0,0,0,0.7);
+    font-size: 12px; color: var(--text3);
   }
   .ptr.down { top: 76px; }
   .ptr-spin {
-    width: 18px; height: 18px; border: 2px solid var(--border);
-    border-top-color: var(--accent); border-radius: 50%;
+    width: 14px; height: 14px; border: 2px solid var(--border);
+    border-top-color: var(--accent);
     animation: spin 0.6s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes cardIn {
-    from { opacity: 0; transform: translateY(16px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* ── Responsive ── */
-  @media (min-width: 640px) {
-    .app-header, .content, .filter-row { max-width: 640px; margin-left: auto; margin-right: auto; }
-    .filter-row { padding-left: 16px; }
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text2); font-size: 12px; padding: 8px 16px;
+    pointer-events: none; opacity: 0; transition: opacity 0.3s;
+    letter-spacing: 0.02em; z-index: 200;
   }
+  .toast.on { opacity: 1; }
 </style>
 </head>
 <body>
 
 <div class="app-header">
   <div class="header-top">
-    <span class="logo">Harmonic Memory</span>
-    <div class="header-meta" id="hCount">
-      <span class="dot pulse"></span> <span id="statText">-</span>
-    </div>
-  </div>
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input class="search-input" id="searchInput" placeholder="搜索记忆…" autofocus>
-    <button class="search-clear" id="searchClear" aria-label="清除">✕</button>
+    <span class="logo">Harmonic <em>Memory</em></span>
+    <span class="stat-text" id="statText">—</span>
   </div>
 </div>
+<div class="search-outer">
+  <div class="search-wrap">
+    <input class="search-input" id="searchInput" placeholder="Search memories…" autofocus>
+    <button class="search-clear" id="searchClear" aria-label="Clear">×</button>
+  </div>
+</div>
+<div class="search-hint" id="searchHint">Browse all &middot; type to search &middot; pull down to refresh</div>
 
 <div class="filter-row" id="filterRow">
-  <span class="chip active" data-type="">全部</span>
-  <span class="chip" data-type="fact">事实</span>
-  <span class="chip" data-type="preference">偏好</span>
-  <span class="chip" data-type="procedure">流程</span>
-  <span class="chip" data-type="concept">概念</span>
-  <span class="chip" data-type="decision">决策</span>
-  <span class="chip" data-type="event">事件</span>
-  <span class="chip" data-type="question">问题</span>
+  <span class="chip active" data-type="">All</span>
+  <span class="chip" data-type="fact">Facts</span>
+  <span class="chip" data-type="preference">Preferences</span>
+  <span class="chip" data-type="procedure">Procedures</span>
+  <span class="chip" data-type="concept">Concepts</span>
+  <span class="chip" data-type="decision">Decisions</span>
+  <span class="chip" data-type="event">Events</span>
+  <span class="chip" data-type="question">Questions</span>
 </div>
 
 <div class="content" id="content">
   <div class="empty-state">
-    <div class="empty-icon">🧠</div>
-    <div class="empty-title">Harmonic Memory</div>
-    <div class="empty-desc">结构化记忆搜索引擎<br>输入关键词或留空浏览全部记忆</div>
+    <div class="empty-mark">Commonplace Book</div>
+    <div class="empty-title">Your AI memory archive</div>
+    <div class="empty-desc">Every conversation, distilled into searchable notes.<br>Memories appear here automatically.</div>
   </div>
 </div>
 
-<div class="ptr" id="ptr">⬇</div>
+<div class="ptr" id="ptr">↓</div>
+<div class="toast" id="toast"></div>
 
 <script>
   const API = '/api/v1';
@@ -307,17 +321,26 @@
   let allResults = [];
 
   const TYPE_META = {
-    preference:  { label: '偏好',  color: 'type-preference' },
-    fact:        { label: '事实',  color: 'type-fact' },
-    concept:     { label: '概念',  color: 'type-concept' },
-    procedure:   { label: '流程',  color: 'type-procedure' },
-    decision:    { label: '决策',  color: 'type-decision' },
-    event:       { label: '事件',  color: 'type-event' },
-    question:    { label: '问题',  color: 'type-question' },
-    relationship:{ label: '关联',  color: 'type-relationship' },
-    mem0_vector: { label: 'mem0', color: 'type-mem0_vector' },
+    preference:   { label: 'Preference',   color: 'type-preference' },
+    fact:         { label: 'Fact',         color: 'type-fact' },
+    concept:      { label: 'Concept',      color: 'type-concept' },
+    procedure:    { label: 'Procedure',    color: 'type-procedure' },
+    decision:     { label: 'Decision',     color: 'type-decision' },
+    event:        { label: 'Event',        color: 'type-event' },
+    question:     { label: 'Question',     color: 'type-question' },
+    relationship: { label: 'Relationship', color: 'type-relationship' },
+    mem0_vector:  { label: 'Mem0',         color: 'type-mem0_vector' },
   };
-  const DEFAULT_META = { label: '记忆', color: 'type-default' };
+  const DEFAULT_META = { label: 'Memory', color: 'type-default' };
+
+  // ── Toast ──
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('on'), 1800);
+  }
 
   // ── Stats ──
   async function loadStats() {
@@ -325,19 +348,20 @@
       const r = await fetch(API + '/stats');
       const s = await r.json();
       document.getElementById('statText').textContent =
-        `${s.total_memories.toLocaleString()} 条记忆 · ${s.ingestion_24h?.total || 0} 今日`;
+        `${s.total_memories.toLocaleString()} entries · ${s.ingestion_24h?.total || 0} today`;
     } catch(e) {}
   }
 
-  // ── Search input clear button ──
+  // ── Search clear ──
   const si = document.getElementById('searchInput');
   const sc = document.getElementById('searchClear');
+  const sh = document.getElementById('searchHint');
   si.addEventListener('input', () => {
     sc.classList.toggle('visible', si.value.length > 0);
   });
   sc.addEventListener('click', () => {
     si.value = ''; sc.classList.remove('visible'); si.focus();
-    currentQuery = ''; resetAndSearch('');
+    currentQuery = ''; sh.style.display = ''; resetAndSearch('');
   });
 
   // ── Filter chips ──
@@ -350,11 +374,12 @@
     resetAndSearch(currentQuery);
   });
 
-  // ── Search triggers ──
-  document.getElementById('searchInput').addEventListener('keydown', e => {
+  // ── Search ──
+  si.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       const q = e.target.value.trim();
       currentQuery = q;
+      sh.style.display = 'none';
       resetAndSearch(q);
     }
   });
@@ -363,8 +388,8 @@
     currentOffset = 0; totalResults = 0; allResults = [];
     document.getElementById('content').innerHTML =
       '<div class="skeleton">' +
-      Array.from({length:4}, (_,i) =>
-        `<div class="sk-card" style="animation-delay:${i*0.1}s"><div class="sk-line w80"></div><div class="sk-line w60"></div><div class="sk-line w40"></div></div>`
+      Array.from({length:5}, (_,i) =>
+        `<div class="sk-card" style="animation-delay:${i*0.08}s"><div class="sk-line w80"></div><div class="sk-line w50"></div><div class="sk-line w30"></div></div>`
       ).join('') + '</div>';
     doSearch(q, 0);
   }
@@ -392,7 +417,7 @@
     } catch(e) {
       if (offset === 0) {
         document.getElementById('content').innerHTML =
-          '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">搜索失败</div><div class="empty-desc">请检查服务是否正常运行</div></div>';
+          `<div class="empty-state"><div class="empty-mark">Error</div><div class="empty-title">Search failed</div><div class="empty-desc">Check if the server is running on port 18900</div></div>`;
       }
     } finally {
       isLoading = false;
@@ -403,11 +428,11 @@
     const area = document.getElementById('content');
     if (!data.results.length) {
       area.innerHTML =
-        '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">未找到相关记忆</div><div class="empty-desc">试试其他关键词或筛选条件</div></div>';
+        `<div class="empty-state"><div class="empty-mark">No results</div><div class="empty-title">Nothing found</div><div class="empty-desc">Try a different term or clear the type filter</div></div>`;
       return;
     }
 
-    let html = `<div class="results-bar"><span class="count">${totalResults} 条结果</span><span>${data.latency_ms}ms</span></div><div class="card-list">`;
+    let html = `<div class="results-bar"><span>${totalResults} result${totalResults !== 1 ? 's' : ''}</span><span>${data.latency_ms}ms</span></div><div class="card-list">`;
     data.results.forEach((r, i) => { html += buildCard(r, i); });
     html += '</div>';
     area.innerHTML = html;
@@ -416,8 +441,8 @@
   function appendResults(results) {
     const list = document.getElementById('content').querySelector('.card-list');
     if (!list) return;
-    const bar = document.querySelector('.results-bar .count');
-    if (bar) bar.textContent = `${totalResults} 条结果`;
+    const bar = document.querySelector('.results-bar span:first-child');
+    if (bar) bar.textContent = `${totalResults} result${totalResults !== 1 ? 's' : ''}`;
     results.forEach((r, i) => {
       list.insertAdjacentHTML('beforeend', buildCard(r, allResults.length - results.length + i));
     });
@@ -427,32 +452,31 @@
     const row = r.row_data || {};
     const memType = row.type || r.source_type || 'unknown';
     const meta = TYPE_META[memType] || DEFAULT_META;
-    const score = Math.round((r.score || 0) * 100);
+    const score = r.score ? Math.round(r.score * 100) : 0;
 
     const time = r.timestamp ? new Date(r.timestamp).toLocaleString('zh-CN', {
-      month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'
+      month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'
     }) : '';
 
     const preview = escapeHtml(r.preview || row.content || '');
     const source = r.source_name || row.source || '';
 
-    // Keywords as tags
     const kwRaw = row.keywords;
     const kwArr = Array.isArray(kwRaw) ? kwRaw
       : (typeof kwRaw === 'string' && kwRaw.trim() ? kwRaw.split(',').map(k => k.trim()).filter(Boolean) : []);
-    const kwTags = kwArr.slice(0, 4).map(k => `<span class="kw-tag">${escapeHtml(k)}</span>`).join('');
+    const kwTags = kwArr.slice(0, 3).map(k => `<span class="kw-tag">${escapeHtml(k)}</span>`).join('');
 
-    return `<div class="card ${meta.color}" style="animation-delay:${i*0.03}s">
+    return `<div class="card ${meta.color}" style="animation-delay:${i*0.025}s">
       <div class="card-top">
-        <span class="type-dot"></span>
         <span class="type-label">${meta.label}</span>
         ${source ? `<span class="card-source">${escapeHtml(source)}</span>` : ''}
-        <span style="flex:1"></span>
-        <span class="card-time">${time}</span>
+        ${time ? `<span class="card-time">${time}</span>` : ''}
       </div>
       <div class="card-body">${preview}</div>
-      ${kwTags ? `<div class="card-foot">${kwTags}</div>` : ''}
-      ${score > 0 ? `<div class="score-bar"><div class="score-fill" style="width:${score}%"></div></div>` : ''}
+      <div class="card-foot">
+        ${kwTags}
+        ${score > 0 ? `<span class="score-dot">${score}%</span>` : ''}
+      </div>
     </div>`;
   }
 
@@ -470,7 +494,7 @@
     if (entries[0].isIntersecting && !isLoading && allResults.length < totalResults) {
       doSearch(currentQuery, currentOffset);
     }
-  }, { rootMargin: '300px' });
+  }, { rootMargin: '400px' });
   observer.observe(sentinel);
 
   // ── Pull-to-refresh ──
@@ -488,7 +512,7 @@
     const dy = e.touches[0].clientY - startY;
     if (dy > 20) {
       ptrEl.classList.add('down');
-      ptrEl.innerHTML = dy > THRESHOLD ? '⟳' : '↓';
+      ptrEl.textContent = dy > THRESHOLD ? '⟳' : '↓';
     }
   }, { passive: true });
 
@@ -500,10 +524,12 @@
       isRefreshing = true;
       ptrEl.classList.add('down');
       ptrEl.innerHTML = '<div class="ptr-spin"></div>';
+      showToast('Refreshing…');
       await resetAndSearch(currentQuery);
-      ptrEl.innerHTML = '↓';
+      ptrEl.textContent = '↓';
       ptrEl.classList.remove('down');
       isRefreshing = false;
+      showToast('Refreshed');
     } else {
       ptrEl.classList.remove('down');
     }

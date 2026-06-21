@@ -2,174 +2,258 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Harmonic Memory</title>
 <style>
   :root {
-    --bg: #080b14;
-    --card: #101726;
-    --border: rgba(255,255,255,0.06);
-    --text: #dde2f0;
-    --text2: #8893b0;
-    --text3: #556082;
-    --accent: #6c8cff;
-    --green: #5eead4;
-    --gold: #fbbf24;
-    --rose: #fda4af;
-    --purple: #c4b5fd;
+    --bg: #05070f;
+    --surface: #0b0f1d;
+    --surface2: #111627;
+    --border: rgba(255,255,255,0.05);
+    --border-active: rgba(255,255,255,0.1);
+    --text: #e4e8f4;
+    --text2: #949db8;
+    --text3: #5a6480;
+    --accent: #7b93ff;
+    --accent-dim: rgba(123,147,255,0.1);
+    --green: #4ce4c8;
+    --green-dim: rgba(76,228,200,0.1);
+    --gold: #f5c842;
+    --gold-dim: rgba(245,200,66,0.1);
+    --rose: #f48f9e;
+    --rose-dim: rgba(244,143,158,0.1);
+    --purple: #b4a5f8;
+    --purple-dim: rgba(180,165,248,0.1);
+    --blue: #7dc4f8;
+    --blue-dim: rgba(125,196,248,0.1);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-xs: 6px;
     --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+    --ease-out: cubic-bezier(0, 0, 0.2, 1);
   }
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-  html, body { height: 100%; }
+  html, body { height: 100%; background: var(--bg); }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: var(--bg);
     color: var(--text);
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
-    -webkit-overflow-scrolling: touch;
-    -webkit-tap-highlight-color: transparent;
+    line-height: 1.5;
   }
 
   /* ── Header ── */
   .app-header {
     position: sticky; top: 0; z-index: 20;
-    background: rgba(8,11,20,0.85); backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(5,7,15,0.88); backdrop-filter: blur(24px) saturate(1.4);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
     border-bottom: 1px solid var(--border);
-    padding: 12px 16px 8px;
-    padding-top: max(12px, env(safe-area-inset-top));
+    padding: 10px 16px 8px;
+    padding-top: max(10px, env(safe-area-inset-top));
   }
   .header-top {
     display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
   .logo {
-    font-size: 18px; font-weight: 700; letter-spacing: -0.2px;
-    background: linear-gradient(135deg, var(--accent), var(--green));
+    font-size: 19px; font-weight: 800; letter-spacing: -0.4px;
+    background: linear-gradient(135deg, #9db4ff 0%, var(--accent) 30%, var(--green) 100%);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
   .header-meta {
-    display: flex; gap: 16px; font-size: 11px; color: var(--text3);
+    font-size: 11px; color: var(--text3);
+    display: flex; align-items: center; gap: 6px;
   }
-  .header-meta span { display: flex; align-items: center; gap: 4px; }
-  .dot { width: 6px; height: 6px; border-radius: 50%; }
-  .dot.on { background: var(--green); box-shadow: 0 0 4px rgba(94,234,212,0.5); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .dot.pulse { animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-  /* ── Search Bar ── */
+  /* ── Search ── */
   .search-wrap {
-    display: flex; gap: 8px;
-    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
-    padding: 4px; transition: border-color 0.2s;
+    display: flex; gap: 0;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); overflow: hidden;
+    transition: border-color 0.25s, box-shadow 0.25s;
   }
-  .search-wrap:focus-within { border-color: var(--accent); }
+  .search-wrap:focus-within {
+    border-color: rgba(123,147,255,0.35);
+    box-shadow: 0 0 0 3px rgba(123,147,255,0.08);
+  }
+  .search-icon {
+    display: flex; align-items: center; padding-left: 14px; color: var(--text3);
+    font-size: 14px; user-select: none;
+  }
   .search-input {
     flex: 1; background: none; border: none; outline: none;
-    color: var(--text); font-size: 15px; padding: 10px 12px;
+    color: var(--text); font-size: 15px; padding: 11px 10px 11px 8px;
     font-family: inherit;
   }
   .search-input::placeholder { color: var(--text3); }
-  .search-btn {
-    flex-shrink: 0; background: var(--accent); color: #fff; border: none;
-    border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 600;
-    cursor: pointer; transition: filter 0.2s;
+  .search-clear {
+    display: none; align-items: center; justify-content: center;
+    width: 32px; background: none; border: none; color: var(--text3);
+    font-size: 16px; cursor: pointer; flex-shrink: 0;
   }
-  .search-btn:active { filter: brightness(1.2); }
+  .search-clear.visible { display: flex; }
 
-  /* ── Filter Chips ── */
+  /* ── Chips ── */
   .filter-row {
-    display: flex; gap: 6px; padding: 8px 16px 8px;
-    overflow-x: auto; -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; border-bottom: 1px solid var(--border);
+    display: flex; gap: 6px; padding: 8px 16px 10px;
+    overflow-x: auto; scrollbar-width: none;
+    border-bottom: 1px solid var(--border);
   }
   .filter-row::-webkit-scrollbar { display: none; }
   .chip {
-    flex-shrink: 0; padding: 5px 14px; border-radius: 16px;
-    font-size: 12px; color: var(--text3); background: var(--card);
-    border: 1px solid var(--border); cursor: pointer;
-    transition: all 0.2s; white-space: nowrap;
+    flex-shrink: 0; padding: 6px 14px; border-radius: 20px;
+    font-size: 12px; font-weight: 500; color: var(--text3);
+    background: transparent; border: 1px solid transparent;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
   }
-  .chip.active, .chip:active { color: var(--accent); border-color: var(--accent); }
+  .chip.active {
+    color: var(--accent); background: var(--accent-dim);
+    border-color: rgba(123,147,255,0.15);
+  }
+  .chip:not(.active):active { color: var(--text2); background: var(--surface2); }
 
-  /* ── Results ── */
-  .content { padding: 8px 16px 60px; }
-  .results-meta {
+  /* ── Content ── */
+  .content { padding: 8px 16px 80px; min-height: 50vh; }
+
+  /* Results bar */
+  .results-bar {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 8px 0; font-size: 11px; color: var(--text3);
+    padding: 10px 0 12px; font-size: 12px; color: var(--text3);
   }
+  .results-bar .count { color: var(--text2); font-weight: 600; }
+
+  /* Cards */
   .card-list { display: flex; flex-direction: column; gap: 10px; }
   .card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 14px; padding: 16px; transition: border-color 0.2s;
-    animation: cardIn 0.35s var(--ease) both;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+    transition: border-color 0.2s, transform 0.2s;
+    animation: cardIn 0.4s var(--ease-out) both;
+    position: relative; overflow: hidden;
   }
-  .card:active { border-color: rgba(255,255,255,0.15); }
-  .card-header {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 10px;
+  .card:active { border-color: var(--border-active); transform: scale(0.985); }
+  .card::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
   }
-  .type-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px;
-    text-transform: uppercase; letter-spacing: 0.3px;
+
+  /* Type badge */
+  .card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .type-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
   }
-  .type-preference { background: rgba(251,191,36,0.12); color: var(--gold); }
-  .type-fact { background: rgba(108,140,255,0.12); color: var(--accent); }
-  .type-concept { background: rgba(196,181,253,0.12); color: var(--purple); }
-  .type-procedure { background: rgba(94,234,212,0.12); color: var(--green); }
-  .type-decision { background: rgba(253,164,175,0.12); color: var(--rose); }
-  .type-event { background: rgba(108,140,255,0.12); color: #93c5fd; }
-  .type-question { background: rgba(255,255,255,0.06); color: var(--text2); }
-  .type-relationship { background: rgba(251,191,36,0.12); color: #fcd34d; }
-  .type-mem0_vector { background: rgba(196,181,253,0.12); color: var(--purple); }
-  .type-default { background: rgba(255,255,255,0.05); color: var(--text3); }
+  .type-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.2px;
+  }
+  .type-preference .type-dot { background: var(--gold); }
+  .type-preference .type-label { color: var(--gold); }
+  .type-fact .type-dot { background: var(--accent); }
+  .type-fact .type-label { color: var(--accent); }
+  .type-concept .type-dot { background: var(--purple); }
+  .type-concept .type-label { color: var(--purple); }
+  .type-procedure .type-dot { background: var(--green); }
+  .type-procedure .type-label { color: var(--green); }
+  .type-decision .type-dot { background: var(--rose); }
+  .type-decision .type-label { color: var(--rose); }
+  .type-event .type-dot { background: var(--blue); }
+  .type-event .type-label { color: var(--blue); }
+  .type-question .type-dot { background: var(--text3); }
+  .type-question .type-label { color: var(--text2); }
+  .type-relationship .type-dot { background: var(--gold); }
+  .type-relationship .type-label { color: var(--gold); }
+  .type-mem0_vector .type-dot { background: var(--purple); }
+  .type-mem0_vector .type-label { color: var(--purple); }
+  .type-default .type-dot { background: var(--text3); }
+  .type-default .type-label { color: var(--text3); }
+
+  /* Card body */
+  .card-body {
+    font-size: 14px; line-height: 1.7; color: var(--text2);
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-body strong { color: var(--text); font-weight: 600; }
+
+  /* Card footer */
+  .card-foot {
+    display: flex; align-items: center; gap: 8px; margin-top: 10px;
+    flex-wrap: wrap;
+  }
   .card-time { font-size: 11px; color: var(--text3); }
-  .card-body { font-size: 14px; line-height: 1.65; color: var(--text2); }
   .card-source {
-    margin-top: 10px; font-size: 11px; color: var(--text3);
-    display: flex; gap: 8px; align-items: center;
+    font-size: 10px; color: var(--accent); font-weight: 500;
+    background: var(--accent-dim); padding: 2px 8px; border-radius: 4px;
   }
-  .src-label { color: var(--accent); }
-
-  /* ── Loading ── */
-  .spinner {
-    width: 24px; height: 24px; border: 2px solid var(--border);
-    border-top-color: var(--accent); border-radius: 50%;
-    animation: spin 0.6s linear infinite; margin: 20px auto;
-    display: none;
+  .kw-tag {
+    font-size: 10px; color: var(--text3); background: rgba(255,255,255,0.03);
+    padding: 2px 8px; border-radius: 4px; border: 1px solid var(--border);
   }
-  .spinner.on { display: block; }
-  .load-more { text-align: center; padding: 20px; font-size: 12px; color: var(--text3); display: none; }
-  .load-more.on { display: block; }
+  .score-bar {
+    height: 2px; background: var(--border); border-radius: 1px;
+    margin-top: 8px; overflow: hidden;
+  }
+  .score-fill {
+    height: 100%; border-radius: 1px;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    transition: width 0.4s var(--ease);
+  }
 
-  /* ── PTR ── */
+  /* ── Skeleton ── */
+  .skeleton { display: flex; flex-direction: column; gap: 10px; }
+  .sk-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+  }
+  .sk-line {
+    height: 12px; background: var(--surface2); border-radius: 6px;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+  .sk-line.w60 { width: 60%; }
+  .sk-line.w80 { width: 80%; }
+  .sk-line.w40 { width: 40%; }
+  .sk-line + .sk-line { margin-top: 10px; }
+  @keyframes shimmer {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+  }
+
+  /* ── Empty ── */
+  .empty-state { text-align: center; padding: 80px 20px; }
+  .empty-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.3; }
+  .empty-title { font-size: 16px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+  .empty-desc { font-size: 13px; color: var(--text3); line-height: 1.6; }
+
+  /* ── Pull-to-refresh ── */
   .ptr {
-    position: fixed; top: -50px; left: 50%; transform: translateX(-50%);
-    z-index: 100; width: 36px; height: 36px;
-    background: var(--card); border: 1px solid var(--border);
+    position: fixed; top: -52px; left: 50%; transform: translateX(-50%);
+    z-index: 100; width: 38px; height: 38px;
+    background: var(--surface2); border: 1px solid var(--border);
     border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    transition: top 0.25s var(--ease); box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    transition: top 0.25s var(--ease); box-shadow: 0 4px 20px rgba(0,0,0,0.6);
     font-size: 14px;
   }
-  .ptr.down { top: 72px; }
-  .ptr .ptr-spin {
+  .ptr.down { top: 76px; }
+  .ptr-spin {
     width: 18px; height: 18px; border: 2px solid var(--border);
     border-top-color: var(--accent); border-radius: 50%;
     animation: spin 0.6s linear infinite;
   }
-
-  /* ── Empty ── */
-  .empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
-  .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
-  .empty-state p { font-size: 14px; line-height: 1.6; }
-
   @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes cardIn {
-    from { opacity: 0; transform: translateY(12px); }
+    from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Responsive ── */
+  @media (min-width: 640px) {
+    .app-header, .content, .filter-row { max-width: 640px; margin-left: auto; margin-right: auto; }
+    .filter-row { padding-left: 16px; }
   }
 </style>
 </head>
@@ -178,13 +262,14 @@
 <div class="app-header">
   <div class="header-top">
     <span class="logo">Harmonic Memory</span>
-    <div class="header-meta">
-      <span id="hCount"><span class="dot on"></span> -</span>
+    <div class="header-meta" id="hCount">
+      <span class="dot pulse"></span> <span id="statText">-</span>
     </div>
   </div>
   <div class="search-wrap">
+    <span class="search-icon">🔍</span>
     <input class="search-input" id="searchInput" placeholder="搜索记忆…" autofocus>
-    <button class="search-btn" id="searchBtn">搜索</button>
+    <button class="search-clear" id="searchClear" aria-label="清除">✕</button>
   </div>
 </div>
 
@@ -201,14 +286,13 @@
 
 <div class="content" id="content">
   <div class="empty-state">
-    <div class="icon">🧠</div>
-    <p>Harmonic Memory<br>结构化记忆搜索</p>
+    <div class="empty-icon">🧠</div>
+    <div class="empty-title">Harmonic Memory</div>
+    <div class="empty-desc">结构化记忆搜索引擎<br>输入关键词或留空浏览全部记忆</div>
   </div>
 </div>
 
-<div class="spinner" id="spinner"></div>
-<div class="load-more" id="loadMore">加载更多…</div>
-<div class="ptr" id="ptr">⬇️</div>
+<div class="ptr" id="ptr">⬇</div>
 
 <script>
   const API = '/api/v1';
@@ -222,47 +306,54 @@
   let isRefreshing = false;
   let allResults = [];
 
-  const TYPE_LABELS = {
-    preference: '偏好', fact: '事实', concept: '概念', procedure: '流程',
-    decision: '决策', question: '问题', event: '事件', relationship: '关联',
-    structured_memory: '记忆', mem0_vector: 'mem0'
+  const TYPE_META = {
+    preference:  { label: '偏好',  color: 'type-preference' },
+    fact:        { label: '事实',  color: 'type-fact' },
+    concept:     { label: '概念',  color: 'type-concept' },
+    procedure:   { label: '流程',  color: 'type-procedure' },
+    decision:    { label: '决策',  color: 'type-decision' },
+    event:       { label: '事件',  color: 'type-event' },
+    question:    { label: '问题',  color: 'type-question' },
+    relationship:{ label: '关联',  color: 'type-relationship' },
+    mem0_vector: { label: 'mem0', color: 'type-mem0_vector' },
   };
-  const TYPE_EMOJI = {
-    preference: '⭐', fact: '📋', concept: '💡', procedure: '🔧',
-    decision: '🎯', question: '❓', event: '📅', relationship: '🔗',
-    structured_memory: '🧠', mem0_vector: '🔮'
-  };
+  const DEFAULT_META = { label: '记忆', color: 'type-default' };
 
-  // ── Header stats ──
+  // ── Stats ──
   async function loadStats() {
     try {
       const r = await fetch(API + '/stats');
       const s = await r.json();
-      document.getElementById('hCount').innerHTML = `<span class="dot on"></span> ${s.total_memories} 条记忆`;
+      document.getElementById('statText').textContent =
+        `${s.total_memories.toLocaleString()} 条记忆 · ${s.ingestion_24h?.total || 0} 今日`;
     } catch(e) {}
   }
 
-  // ── Type filter chips ──
+  // ── Search input clear button ──
+  const si = document.getElementById('searchInput');
+  const sc = document.getElementById('searchClear');
+  si.addEventListener('input', () => {
+    sc.classList.toggle('visible', si.value.length > 0);
+  });
+  sc.addEventListener('click', () => {
+    si.value = ''; sc.classList.remove('visible'); si.focus();
+    currentQuery = ''; resetAndSearch('');
+  });
+
+  // ── Filter chips ──
   document.getElementById('filterRow').addEventListener('click', e => {
     const chip = e.target.closest('.chip');
     if (!chip) return;
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
     chip.classList.add('active');
     activeType = chip.dataset.type;
-    if (currentQuery) resetAndSearch(currentQuery);
+    resetAndSearch(currentQuery);
   });
 
   // ── Search triggers ──
-  document.getElementById('searchBtn').addEventListener('click', () => {
-    const q = document.getElementById('searchInput').value.trim();
-    if (!q) return;
-    currentQuery = q;
-    resetAndSearch(q);
-  });
   document.getElementById('searchInput').addEventListener('keydown', e => {
     if (e.key === 'Enter') {
       const q = e.target.value.trim();
-      if (!q) return;
       currentQuery = q;
       resetAndSearch(q);
     }
@@ -270,23 +361,20 @@
 
   function resetAndSearch(q) {
     currentOffset = 0; totalResults = 0; allResults = [];
-    document.getElementById('content').innerHTML = '';
-    document.getElementById('loadMore').className = 'load-more';
+    document.getElementById('content').innerHTML =
+      '<div class="skeleton">' +
+      Array.from({length:4}, (_,i) =>
+        `<div class="sk-card" style="animation-delay:${i*0.1}s"><div class="sk-line w80"></div><div class="sk-line w60"></div><div class="sk-line w40"></div></div>`
+      ).join('') + '</div>';
     doSearch(q, 0);
   }
 
   async function doSearch(q, offset = 0) {
     if (isLoading || isRefreshing) return;
     isLoading = true;
-    const spinner = document.getElementById('spinner');
-    const loadMore = document.getElementById('loadMore');
-    if (offset === 0) spinner.classList.add('on');
-    if (offset > 0) { loadMore.className = 'load-more on'; loadMore.textContent = '加载更多…'; }
 
     try {
-      const params = new URLSearchParams({
-        q, limit: String(PAGE_SIZE), offset: String(offset)
-      });
+      const params = new URLSearchParams({ q, limit: String(PAGE_SIZE), offset: String(offset) });
       if (activeType) params.set('source', activeType);
       const res = await fetch(API + '/search-unified?' + params);
       const data = await res.json();
@@ -296,39 +384,31 @@
 
       if (offset === 0) {
         allResults = data.results;
-        renderResults(data, true);
+        renderResults(data);
       } else {
         allResults = allResults.concat(data.results);
         appendResults(data.results);
       }
-
-      if (allResults.length >= totalResults) {
-        loadMore.className = totalResults === 0 ? 'load-more' : 'load-more on';
-        if (totalResults > 0) loadMore.textContent = `共 ${totalResults} 条记忆`;
-      } else {
-        loadMore.className = 'load-more';
-      }
     } catch(e) {
       if (offset === 0) {
-        document.getElementById('content').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>搜索失败</p></div>`;
+        document.getElementById('content').innerHTML =
+          '<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">搜索失败</div><div class="empty-desc">请检查服务是否正常运行</div></div>';
       }
     } finally {
-      spinner.classList.remove('on');
       isLoading = false;
     }
   }
 
-  function renderResults(data, replace = true) {
+  function renderResults(data) {
     const area = document.getElementById('content');
     if (!data.results.length) {
-      area.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>未找到相关记忆</p></div>`;
+      area.innerHTML =
+        '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">未找到相关记忆</div><div class="empty-desc">试试其他关键词或筛选条件</div></div>';
       return;
     }
 
-    let html = `<div class="results-meta"><span>${totalResults} 条结果 · ${data.latency_ms}ms</span></div><div class="card-list">`;
-    data.results.forEach((r, i) => {
-      html += buildCard(r, i);
-    });
+    let html = `<div class="results-bar"><span class="count">${totalResults} 条结果</span><span>${data.latency_ms}ms</span></div><div class="card-list">`;
+    data.results.forEach((r, i) => { html += buildCard(r, i); });
     html += '</div>';
     area.innerHTML = html;
   }
@@ -336,23 +416,18 @@
   function appendResults(results) {
     const list = document.getElementById('content').querySelector('.card-list');
     if (!list) return;
-    const meta = document.querySelector('.results-meta span');
-    if (meta) meta.textContent = `${totalResults} 条结果`;
+    const bar = document.querySelector('.results-bar .count');
+    if (bar) bar.textContent = `${totalResults} 条结果`;
     results.forEach((r, i) => {
-      list.insertAdjacentHTML('beforeend', buildCard(r, i));
+      list.insertAdjacentHTML('beforeend', buildCard(r, allResults.length - results.length + i));
     });
   }
 
   function buildCard(r, i) {
     const row = r.row_data || {};
     const memType = row.type || r.source_type || 'unknown';
-    const typeLabel = TYPE_LABELS[memType] || memType;
-    const emoji = TYPE_EMOJI[memType] || '📄';
-    const typeClass = `type-${memType}` in {
-      'type-preference':1,'type-fact':1,'type-concept':1,'type-procedure':1,
-      'type-decision':1,'type-event':1,'type-question':1,'type-relationship':1,
-      'type-mem0_vector':1
-    } ? `type-${memType}` : 'type-default';
+    const meta = TYPE_META[memType] || DEFAULT_META;
+    const score = Math.round((r.score || 0) * 100);
 
     const time = r.timestamp ? new Date(r.timestamp).toLocaleString('zh-CN', {
       month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'
@@ -360,36 +435,43 @@
 
     const preview = escapeHtml(r.preview || row.content || '');
     const source = r.source_name || row.source || '';
+
+    // Keywords as tags
     const kwRaw = row.keywords;
     const kwArr = Array.isArray(kwRaw) ? kwRaw
       : (typeof kwRaw === 'string' && kwRaw.trim() ? kwRaw.split(',').map(k => k.trim()).filter(Boolean) : []);
-    const keywords = kwArr.slice(0, 3).join(' · ');
+    const kwTags = kwArr.slice(0, 4).map(k => `<span class="kw-tag">${escapeHtml(k)}</span>`).join('');
 
-    return `<div class="card" style="animation-delay:${i*0.04}s">
-      <div class="card-header">
-        <span class="type-badge ${typeClass}">${emoji} ${typeLabel}</span>
+    return `<div class="card ${meta.color}" style="animation-delay:${i*0.03}s">
+      <div class="card-top">
+        <span class="type-dot"></span>
+        <span class="type-label">${meta.label}</span>
+        ${source ? `<span class="card-source">${escapeHtml(source)}</span>` : ''}
+        <span style="flex:1"></span>
         <span class="card-time">${time}</span>
       </div>
       <div class="card-body">${preview}</div>
-      ${keywords || source ? `<div class="card-source">${source ? '<span class="src-label">' + source + '</span>' : ''}${keywords ? '<span>' + keywords + '</span>' : ''}</div>` : ''}
+      ${kwTags ? `<div class="card-foot">${kwTags}</div>` : ''}
+      ${score > 0 ? `<div class="score-bar"><div class="score-fill" style="width:${score}%"></div></div>` : ''}
     </div>`;
   }
 
   function escapeHtml(s) {
     const div = document.createElement('div');
-    div.textContent = s;
+    div.textContent = s || '';
     return div.innerHTML;
   }
 
   // ── Infinite scroll ──
+  const sentinel = document.createElement('div');
+  sentinel.style.cssText = 'height:1px';
+  document.body.appendChild(sentinel);
   const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting && !isLoading && allResults.length < totalResults && currentQuery) {
-        doSearch(currentQuery, currentOffset);
-      }
-    });
-  }, { rootMargin: '200px' });
-  observer.observe(document.getElementById('loadMore'));
+    if (entries[0].isIntersecting && !isLoading && allResults.length < totalResults) {
+      doSearch(currentQuery, currentOffset);
+    }
+  }, { rootMargin: '300px' });
+  observer.observe(sentinel);
 
   // ── Pull-to-refresh ──
   const ptrEl = document.getElementById('ptr');
@@ -406,7 +488,7 @@
     const dy = e.touches[0].clientY - startY;
     if (dy > 20) {
       ptrEl.classList.add('down');
-      ptrEl.textContent = dy > THRESHOLD ? '🔄' : '⬇️';
+      ptrEl.innerHTML = dy > THRESHOLD ? '⟳' : '↓';
     }
   }, { passive: true });
 
@@ -414,12 +496,12 @@
     if (!pulling) return;
     pulling = false;
     const dy = e.changedTouches[0].clientY - startY;
-    if (dy > THRESHOLD && window.scrollY <= 5 && currentQuery) {
+    if (dy > THRESHOLD && window.scrollY <= 5) {
       isRefreshing = true;
       ptrEl.classList.add('down');
       ptrEl.innerHTML = '<div class="ptr-spin"></div>';
       await resetAndSearch(currentQuery);
-      ptrEl.innerHTML = '⬇️';
+      ptrEl.innerHTML = '↓';
       ptrEl.classList.remove('down');
       isRefreshing = false;
     } else {
@@ -427,11 +509,10 @@
     }
   });
 
-  // ── Init ── load immediately, ingest in background
+  // ── Init ──
   loadStats();
   doSearch('', 0);
   setInterval(loadStats, 60000);
-  // Fire-and-forget ingestion (may take 30s+ via LLM)
   fetch(API + '/ingest-recent?max_files=3', { method: 'POST' }).catch(() => {});
 </script>
 </body>

@@ -1,28 +1,43 @@
 #!/bin/bash
 # Harmonic Memory — Claude Code Stop hook
-# Reads stdin JSON from Claude Code (session metadata),
-# extracts the last exchanges from the transcript,
-# and POSTs to the memory API for async ingestion.
+# Extracts recent exchanges and POSTs to the memory API.
+# Non-blocking: fire-and-forget, 10s timeout from hook config.
 #
-# Non-blocking: sends HTTP request, does NOT wait for extraction.
+# Cooldown: skips if last ingest was < 30 min ago, to avoid
+# re-extracting the same growing session file on every stop.
 
 API_URL="${HARMONIC_MEMORY_URL:-http://127.0.0.1:18900}"
-PYTHON="/f/aiAgent/harmonic-memory/.venv/Scripts/python"
+PYTHON="/f/harmonic-memory/.venv/Scripts/python"
+COOLDOWN_FILE="${HOME}/.harmonic-memory/last_ingest_time"
+COOLDOWN_SEC=1800  # 30 minutes
+
+# Fallback if venv doesn't exist yet
+if [ ! -f "$PYTHON" ]; then
+    PYTHON="/f/aiAgent/harmonic-memory/.venv/Scripts/python"
+fi
+
+# ── Cooldown check ──
+NOW=$(date +%s)
+if [ -f "$COOLDOWN_FILE" ]; then
+    LAST=$(cat "$COOLDOWN_FILE" 2>/dev/null || echo 0)
+    ELAPSED=$((NOW - LAST))
+    if [ "$ELAPSED" -lt "$COOLDOWN_SEC" ]; then
+        exit 0  # Too soon, skip
+    fi
+fi
+
 TEMP_DIR="${HOME}/.harmonic-memory/tmp"
 TEMP_DIR_WIN=$(cygpath -w "$TEMP_DIR" 2>/dev/null || echo "$TEMP_DIR")
 mkdir -p "$TEMP_DIR"
 
 # ── Step 1: Find the transcript ──
 TRANSCRIPT=""
-
-# Try reading stdin (Claude Code passes session JSON)
 STDIN_DATA=$(cat 2>/dev/null || echo "")
 if [ -n "$STDIN_DATA" ]; then
     TRANSCRIPT=$(echo "$STDIN_DATA" | "$PYTHON" -c "
 import json,sys
 try:
     data = json.loads(sys.stdin.read())
-    # Try multiple possible field names
     for key in ('transcript_path','history_path','session_path','path'):
         if key in data:
             print(data[key])
@@ -37,35 +52,25 @@ if [ -z "$TRANSCRIPT" ] || [ ! -f "$TRANSCRIPT" ]; then
         xargs ls -t 2>/dev/null | head -1)
 fi
 
-# Nothing to process
 if [ -z "$TRANSCRIPT" ] || [ ! -f "$TRANSCRIPT" ]; then
     exit 0
 fi
 
-# Convert Unix path to Windows for Python (cygpath available in Git Bash)
 TRANSCRIPT_WIN=$(cygpath -w "$TRANSCRIPT" 2>/dev/null || echo "$TRANSCRIPT")
 
-# ── Step 2: Extract exchanges, chunk, and POST in batches ──
-PAYLOAD_FILE="$TEMP_DIR/ingest_payload_$$.json"
-PAYLOAD_FILE_WIN="$TEMP_DIR_WIN\\ingest_payload_$$.json"
-
-# Use Python to extract ALL exchanges, chunk by 6000 chars, POST each chunk
+# ── Step 2: Extract recent exchanges, POST single chunk ──
 "$PYTHON" -c "
-import json, sys, os, httpx, time
+import json, sys, os, httpx
 
 transcript_path = os.path.expanduser(r'$TRANSCRIPT_WIN')
-
-# Fallback: find latest transcript
 if not os.path.exists(transcript_path):
     import glob
     candidates = glob.glob(os.path.expanduser('~/.claude/projects/*/*.jsonl'))
     if candidates:
         transcript_path = max(candidates, key=os.path.getmtime)
-
 if not os.path.exists(transcript_path):
     sys.exit(0)
 
-# Extract all user/assistant exchanges (not just last 200 lines)
 exchanges = []
 try:
     with open(transcript_path, encoding='utf-8', errors='ignore') as f:
@@ -81,47 +86,30 @@ try:
                         if isinstance(c, dict) and c.get('type') == 'text'
                     )
                 if role in ('user', 'assistant') and content and content.strip():
-                    # Shorter per-exchange limit to fit more in context
-                    exchanges.append(f'{role}: {content[:800]}')
+                    exchanges.append(f'{role}: {content[:600]}')
             except: pass
-except Exception as e:
-    pass
+except: pass
 
-if not exchanges:
+if len(exchanges) < 10:
     sys.exit(0)
 
-# Skip short/repetitive sessions (< 15 exchanges) to avoid ingesting monitoring noise
-if len(exchanges) < 15:
+# Only last 60 exchanges (not 200) to focus on the recent conversation
+selected = exchanges[-60:]
+text = '\n'.join(selected)
+if len(text.strip()) < 200:
     sys.exit(0)
 
-# Use last 200 exchanges, chunk into ~6000 char pieces for reliable extraction
-selected = exchanges[-200:]
-chunks = []
-current = []
-current_len = 0
-for ex in selected:
-    if current_len + len(ex) > 6000 and current:
-        chunks.append('\n'.join(current))
-        current = []
-        current_len = 0
-    current.append(ex)
-    current_len += len(ex)
-if current:
-    chunks.append('\n'.join(current))
-
-# Fire-and-forget POST each chunk
+# Single POST (not chunked — one ingestion per session stop)
 api_url = os.environ.get('HARMONIC_MEMORY_URL', 'http://127.0.0.1:18900')
-for i, chunk in enumerate(chunks):
-    if len(chunk.strip()) < 20:
-        continue
-    try:
-        httpx.post(
-            f'{api_url}/api/v1/ingest',
-            json={'text': chunk, 'source': 'claude', 'source_ref': f'{transcript_path}#chunk{i}'},
-            timeout=300.0
-        )
-    except:
-        pass  # Best-effort, don't block Claude shutdown
+try:
+    httpx.post(
+        f'{api_url}/api/v1/ingest',
+        json={'text': text, 'source': 'claude', 'source_ref': os.path.basename(transcript_path)},
+        timeout=10.0
+    )
+except: pass
 "
 
+# Record cooldown timestamp
+echo "$NOW" > "$COOLDOWN_FILE"
 exit 0

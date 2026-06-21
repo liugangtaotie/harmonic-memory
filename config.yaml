@@ -1,0 +1,72 @@
+server:
+  host: "127.0.0.1"
+  port: 18900
+
+storage:
+  qdrant:
+    url: "http://localhost:6333"
+    collection: "harmonic_memories"
+    vector_size: 768
+  sqlite:
+    path: "~/.harmonic-memory/memory.db"
+  archive:
+    path: "~/.memoryarchive"
+
+models:
+  extraction:
+    provider: "deepseek"
+    model: "qwen3.6:latest"
+    base_url: "http://localhost:11434"
+    fallback_provider: "ollama"
+    fallback_model: "deepseek-v4-pro"
+    fallback_base_url: "https://api.deepseek.com/v1"
+    temperature: 0.3
+    max_tokens: 4000
+  embedding:
+    provider: "ollama"
+    model: "nomic-embed-text:latest"
+    base_url: "http://localhost:11434"
+
+lifecycle:
+  decay:
+    half_life_days: 30
+    archive_threshold: 0.1
+    decayed_threshold: 0.5
+    type_weights:
+      decision: 0.0
+      preference: 0.3
+      procedure: 0.5
+      concept: 0.7
+      fact: 1.0
+      relationship: 1.0
+      question: 1.5
+      event: 2.0
+  consolidation:
+    schedule: "0 2 * * *"
+    min_group_size: 3
+    max_per_group: 20
+  profile:
+    update_schedule: "0 3 * * *"
+    min_confidence: 0.6
+
+ingestion:
+  dedup:
+    vector_threshold: 0.92
+  quality:
+    min_confidence: 0.4
+    min_importance: 0.2
+  limits:
+    max_per_batch: 50
+    max_transcript_chars: 50000
+
+search:
+  hybrid:
+    keyword_weight: 1.0
+    vector_weight: 0.7
+    fusion_k: 60
+  max_results: 50
+
+logging:
+  level: "INFO"
+  file: "~/.harmonic-memory/server.log"
+  format: "json"

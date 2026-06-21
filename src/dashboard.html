@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Harmonic Memory</title>
+<style>
+  :root {
+    --bg: #080b14;
+    --card: #101726;
+    --border: rgba(255,255,255,0.06);
+    --text: #dde2f0;
+    --text2: #8893b0;
+    --text3: #556082;
+    --accent: #6c8cff;
+    --green: #5eead4;
+    --gold: #fbbf24;
+    --rose: #fda4af;
+    --purple: #c4b5fd;
+    --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ── Header ── */
+  .app-header {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(8,11,20,0.85); backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px 8px;
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+  .header-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .logo {
+    font-size: 18px; font-weight: 700; letter-spacing: -0.2px;
+    background: linear-gradient(135deg, var(--accent), var(--green));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header-meta {
+    display: flex; gap: 16px; font-size: 11px; color: var(--text3);
+  }
+  .header-meta span { display: flex; align-items: center; gap: 4px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .dot.on { background: var(--green); box-shadow: 0 0 4px rgba(94,234,212,0.5); }
+
+  /* ── Search Bar ── */
+  .search-wrap {
+    display: flex; gap: 8px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 4px; transition: border-color 0.2s;
+  }
+  .search-wrap:focus-within { border-color: var(--accent); }
+  .search-input {
+    flex: 1; background: none; border: none; outline: none;
+    color: var(--text); font-size: 15px; padding: 10px 12px;
+    font-family: inherit;
+  }
+  .search-input::placeholder { color: var(--text3); }
+  .search-btn {
+    flex-shrink: 0; background: var(--accent); color: #fff; border: none;
+    border-radius: 10px; padding: 10px 18px; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: filter 0.2s;
+  }
+  .search-btn:active { filter: brightness(1.2); }
+
+  /* ── Filter Chips ── */
+  .filter-row {
+    display: flex; gap: 6px; padding: 8px 16px 8px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; border-bottom: 1px solid var(--border);
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .chip {
+    flex-shrink: 0; padding: 5px 14px; border-radius: 16px;
+    font-size: 12px; color: var(--text3); background: var(--card);
+    border: 1px solid var(--border); cursor: pointer;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .chip.active, .chip:active { color: var(--accent); border-color: var(--accent); }
+
+  /* ── Results ── */
+  .content { padding: 8px 16px 60px; }
+  .results-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; font-size: 11px; color: var(--text3);
+  }
+  .card-list { display: flex; flex-direction: column; gap: 10px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px; transition: border-color 0.2s;
+    animation: cardIn 0.35s var(--ease) both;
+  }
+  .card:active { border-color: rgba(255,255,255,0.15); }
+  .card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .type-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px;
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .type-preference { background: rgba(251,191,36,0.12); color: var(--gold); }
+  .type-fact { background: rgba(108,140,255,0.12); color: var(--accent); }
+  .type-concept { background: rgba(196,181,253,0.12); color: var(--purple); }
+  .type-procedure { background: rgba(94,234,212,0.12); color: var(--green); }
+  .type-decision { background: rgba(253,164,175,0.12); color: var(--rose); }
+  .type-event { background: rgba(108,140,255,0.12); color: #93c5fd; }
+  .type-question { background: rgba(255,255,255,0.06); color: var(--text2); }
+  .type-relationship { background: rgba(251,191,36,0.12); color: #fcd34d; }
+  .type-mem0_vector { background: rgba(196,181,253,0.12); color: var(--purple); }
+  .type-default { background: rgba(255,255,255,0.05); color: var(--text3); }
+  .card-time { font-size: 11px; color: var(--text3); }
+  .card-body { font-size: 14px; line-height: 1.65; color: var(--text2); }
+  .card-source {
+    margin-top: 10px; font-size: 11px; color: var(--text3);
+    display: flex; gap: 8px; align-items: center;
+  }
+  .src-label { color: var(--accent); }
+
+  /* ── Loading ── */
+  .spinner {
+    width: 24px; height: 24px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.6s linear infinite; margin: 20px auto;
+    display: none;
+  }
+  .spinner.on { display: block; }
+  .load-more { text-align: center; padding: 20px; font-size: 12px; color: var(--text3); display: none; }
+  .load-more.on { display: block; }
+
+  /* ── PTR ── */
+  .ptr {
+    position: fixed; top: -50px; left: 50%; transform: translateX(-50%);
+    z-index: 100; width: 36px; height: 36px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    transition: top 0.25s var(--ease); box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    font-size: 14px;
+  }
+  .ptr.down { top: 72px; }
+  .ptr .ptr-spin {
+    width: 18px; height: 18px; border: 2px solid var(--border);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  /* ── Empty ── */
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+  .empty-state p { font-size: 14px; line-height: 1.6; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-top">
+    <span class="logo">Harmonic Memory</span>
+    <div class="header-meta">
+      <span id="hCount"><span class="dot on"></span> -</span>
+    </div>
+  </div>
+  <div class="search-wrap">
+    <input class="search-input" id="searchInput" placeholder="搜索记忆…" autofocus>
+    <button class="search-btn" id="searchBtn">搜索</button>
+  </div>
+</div>
+
+<div class="filter-row" id="filterRow">
+  <span class="chip active" data-type="">全部</span>
+  <span class="chip" data-type="fact">事实</span>
+  <span class="chip" data-type="preference">偏好</span>
+  <span class="chip" data-type="procedure">流程</span>
+  <span class="chip" data-type="concept">概念</span>
+  <span class="chip" data-type="decision">决策</span>
+  <span class="chip" data-type="event">事件</span>
+  <span class="chip" data-type="question">问题</span>
+</div>
+
+<div class="content" id="content">
+  <div class="empty-state">
+    <div class="icon">🧠</div>
+    <p>Harmonic Memory<br>结构化记忆搜索</p>
+  </div>
+</div>
+
+<div class="spinner" id="spinner"></div>
+<div class="load-more" id="loadMore">加载更多…</div>
+<div class="ptr" id="ptr">⬇️</div>
+
+<script>
+  const API = '/api/v1';
+  const PAGE_SIZE = 20;
+
+  let activeType = '';
+  let currentQuery = '';
+  let currentOffset = 0;
+  let totalResults = 0;
+  let isLoading = false;
+  let isRefreshing = false;
+  let allResults = [];
+
+  const TYPE_LABELS = {
+    preference: '偏好', fact: '事实', concept: '概念', procedure: '流程',
+    decision: '决策', question: '问题', event: '事件', relationship: '关联',
+    structured_memory: '记忆', mem0_vector: 'mem0'
+  };
+  const TYPE_EMOJI = {
+    preference: '⭐', fact: '📋', concept: '💡', procedure: '🔧',
+    decision: '🎯', question: '❓', event: '📅', relationship: '🔗',
+    structured_memory: '🧠', mem0_vector: '🔮'
+  };
+
+  // ── Header stats ──
+  async function loadStats() {
+    try {
+      const r = await fetch(API + '/stats');
+      const s = await r.json();
+      document.getElementById('hCount').innerHTML = `<span class="dot on"></span> ${s.total_memories} 条记忆`;
+    } catch(e) {}
+  }
+
+  // ── Type filter chips ──
+  document.getElementById('filterRow').addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    activeType = chip.dataset.type;
+    if (currentQuery) resetAndSearch(currentQuery);
+  });
+
+  // ── Search triggers ──
+  document.getElementById('searchBtn').addEventListener('click', () => {
+    const q = document.getElementById('searchInput').value.trim();
+    if (!q) return;
+    currentQuery = q;
+    resetAndSearch(q);
+  });
+  document.getElementById('searchInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const q = e.target.value.trim();
+      if (!q) return;
+      currentQuery = q;
+      resetAndSearch(q);
+    }
+  });
+
+  function resetAndSearch(q) {
+    currentOffset = 0; totalResults = 0; allResults = [];
+    document.getElementById('content').innerHTML = '';
+    document.getElementById('loadMore').className = 'load-more';
+    doSearch(q, 0);
+  }
+
+  async function doSearch(q, offset = 0) {
+    if (isLoading || isRefreshing) return;
+    isLoading = true;
+    const spinner = document.getElementById('spinner');
+    const loadMore = document.getElementById('loadMore');
+    if (offset === 0) spinner.classList.add('on');
+    if (offset > 0) { loadMore.className = 'load-more on'; loadMore.textContent = '加载更多…'; }
+
+    try {
+      const params = new URLSearchParams({
+        q, limit: String(PAGE_SIZE), offset: String(offset)
+      });
+      if (activeType) params.set('source', activeType);
+      const res = await fetch(API + '/search-unified?' + params);
+      const data = await res.json();
+
+      totalResults = data.total;
+      currentOffset = offset + data.results.length;
+
+      if (offset === 0) {
+        allResults = data.results;
+        renderResults(data, true);
+      } else {
+        allResults = allResults.concat(data.results);
+        appendResults(data.results);
+      }
+
+      if (allResults.length >= totalResults) {
+        loadMore.className = totalResults === 0 ? 'load-more' : 'load-more on';
+        if (totalResults > 0) loadMore.textContent = `共 ${totalResults} 条记忆`;
+      } else {
+        loadMore.className = 'load-more';
+      }
+    } catch(e) {
+      if (offset === 0) {
+        document.getElementById('content').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>搜索失败</p></div>`;
+      }
+    } finally {
+      spinner.classList.remove('on');
+      isLoading = false;
+    }
+  }
+
+  function renderResults(data, replace = true) {
+    const area = document.getElementById('content');
+    if (!data.results.length) {
+      area.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>未找到相关记忆</p></div>`;
+      return;
+    }
+
+    let html = `<div class="results-meta"><span>${totalResults} 条结果 · ${data.latency_ms}ms</span></div><div class="card-list">`;
+    data.results.forEach((r, i) => {
+      html += buildCard(r, i);
+    });
+    html += '</div>';
+    area.innerHTML = html;
+  }
+
+  function appendResults(results) {
+    const list = document.getElementById('content').querySelector('.card-list');
+    if (!list) return;
+    const meta = document.querySelector('.results-meta span');
+    if (meta) meta.textContent = `${totalResults} 条结果`;
+    results.forEach((r, i) => {
+      list.insertAdjacentHTML('beforeend', buildCard(r, i));
+    });
+  }
+
+  function buildCard(r, i) {
+    const row = r.row_data || {};
+    const memType = row.type || r.source_type || 'unknown';
+    const typeLabel = TYPE_LABELS[memType] || memType;
+    const emoji = TYPE_EMOJI[memType] || '📄';
+    const typeClass = `type-${memType}` in {
+      'type-preference':1,'type-fact':1,'type-concept':1,'type-procedure':1,
+      'type-decision':1,'type-event':1,'type-question':1,'type-relationship':1,
+      'type-mem0_vector':1
+    } ? `type-${memType}` : 'type-default';
+
+    const time = r.timestamp ? new Date(r.timestamp).toLocaleString('zh-CN', {
+      month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'
+    }) : '';
+
+    const preview = escapeHtml(r.preview || row.content || '');
+    const source = r.source_name || row.source || '';
+    const kwRaw = row.keywords;
+    const kwArr = Array.isArray(kwRaw) ? kwRaw
+      : (typeof kwRaw === 'string' && kwRaw.trim() ? kwRaw.split(',').map(k => k.trim()).filter(Boolean) : []);
+    const keywords = kwArr.slice(0, 3).join(' · ');
+
+    return `<div class="card" style="animation-delay:${i*0.04}s">
+      <div class="card-header">
+        <span class="type-badge ${typeClass}">${emoji} ${typeLabel}</span>
+        <span class="card-time">${time}</span>
+      </div>
+      <div class="card-body">${preview}</div>
+      ${keywords || source ? `<div class="card-source">${source ? '<span class="src-label">' + source + '</span>' : ''}${keywords ? '<span>' + keywords + '</span>' : ''}</div>` : ''}
+    </div>`;
+  }
+
+  function escapeHtml(s) {
+    const div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  // ── Infinite scroll ──
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !isLoading && allResults.length < totalResults && currentQuery) {
+        doSearch(currentQuery, currentOffset);
+      }
+    });
+  }, { rootMargin: '200px' });
+  observer.observe(document.getElementById('loadMore'));
+
+  // ── Pull-to-refresh ──
+  const ptrEl = document.getElementById('ptr');
+  let startY = 0, pulling = false;
+  const THRESHOLD = 80;
+
+  document.addEventListener('touchstart', e => {
+    if (window.scrollY > 5 || isLoading || isRefreshing) return;
+    startY = e.touches[0].clientY; pulling = true;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 20) {
+      ptrEl.classList.add('down');
+      ptrEl.textContent = dy > THRESHOLD ? '🔄' : '⬇️';
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', async e => {
+    if (!pulling) return;
+    pulling = false;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (dy > THRESHOLD && window.scrollY <= 5 && currentQuery) {
+      isRefreshing = true;
+      ptrEl.classList.add('down');
+      ptrEl.innerHTML = '<div class="ptr-spin"></div>';
+      await resetAndSearch(currentQuery);
+      ptrEl.innerHTML = '⬇️';
+      ptrEl.classList.remove('down');
+      isRefreshing = false;
+    } else {
+      ptrEl.classList.remove('down');
+    }
+  });
+
+  // ── Init ── load immediately, ingest in background
+  loadStats();
+  doSearch('', 0);
+  setInterval(loadStats, 60000);
+  // Fire-and-forget ingestion (may take 30s+ via LLM)
+  fetch(API + '/ingest-recent?max_files=3', { method: 'POST' }).catch(() => {});
+</script>
+</body>
+</html>

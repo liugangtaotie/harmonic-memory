@@ -126,9 +126,30 @@ async def run_decay_cycle(db: MemoryDB | None = None):
         f"{decayed} decayed, {archived} archived"
     )
 
+    # ── Hard storage limits ──
+    storage_cfg = config.ingestion.limits
+    active_total = db.conn.execute(
+        "SELECT COUNT(*) FROM memories WHERE state IN ('active','extracted')"
+    ).fetchone()[0]
+
+    if active_total > getattr(storage_cfg, "aggressive_decay_threshold", 1500):
+        # Aggressive decay: archive lowest-score active memories until under limit
+        excess = active_total - getattr(storage_cfg, "max_active_memories", 2000)
+        if excess > 0:
+            rows = db.conn.execute(
+                "SELECT id, score FROM memories WHERE state IN ('active','extracted') "
+                "ORDER BY score ASC, created_at ASC LIMIT ?",
+                (min(excess, 500),),
+            ).fetchall()
+            for r in rows:
+                db.update_memory(r["id"], {"state": "archived", "score": r["score"]})
+                archived += 1
+            logger.info(f"Aggressive decay: archived {len(rows)} memories (over limit)")
+
     return {
         "active": active_count,
         "decayed": decayed,
         "archived": archived,
         "total": len(all_memories),
+        "hard_limit_enforced": active_total > getattr(storage_cfg, "aggressive_decay_threshold", 1500),
     }

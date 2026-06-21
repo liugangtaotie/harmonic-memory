@@ -9,6 +9,9 @@ from ..db.sqlite import MemoryDB
 from ..db.qdrant_client import MemoryQdrant
 from ..search import unified_search as unified_search_fn
 from ..sources.session_watcher import ingest_recent_sessions
+from ..lifecycle.decay import run_decay_cycle
+from ..lifecycle.consolidate import consolidate_memories
+from ..neural import spread_activate, reinforce_edges
 from .schemas import (
     IngestRequest, IngestResponse,
     MemoryResponse, MemoryUpdate,
@@ -58,7 +61,7 @@ async def ingest_text(req: IngestRequest):
 
 @router.get("/search", response_model=SearchResponse)
 async def search_memories(
-    q: str = Query(..., min_length=1, description="Search query"),
+    q: str = Query(default="", description="Search query (empty = all recent)"),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     type: str | None = Query(default=None),
@@ -123,6 +126,56 @@ async def get_memory(memory_id: str):
         raise HTTPException(status_code=404, detail="Memory not found")
     database.record_access(memory_id)
     return MemoryResponse(**mem)
+
+
+@router.get("/memories/{memory_id}/related", response_model=list[MemoryResponse])
+async def get_related_memories(
+    memory_id: str,
+    max_depth: int = Query(default=3, ge=1, le=5),
+    limit: int = Query(default=20, ge=1, le=50),
+):
+    """Get related memories via spreading activation through the edge graph.
+
+    Follows edges bidirectionally, decaying activation per hop.
+    Records access on all activated memories for Hebbian reinforcement.
+    """
+    database = get_db()
+
+    # Verify memory exists
+    mem = database.get_memory(memory_id)
+    if mem is None:
+        raise HTTPException(status_code=404, detail="Memory not found")
+
+    # Record access on the seed
+    database.record_access(memory_id)
+
+    # Spread activation through the graph
+    activated = spread_activate(
+        seed_id=memory_id,
+        db=database,
+        max_depth=max_depth,
+        max_results=limit,
+    )
+
+    # Fetch full memory objects + record access for reinforcement
+    results = []
+    for a in activated:
+        m = database.get_memory(a["memory_id"])
+        if m:
+            m["_activation"] = a["activation"]
+            m["_depth"] = a["depth"]
+            results.append(m)
+            database.record_access(a["memory_id"])
+
+    # Hebbian reinforcement: strengthen edges along activation paths
+    if activated:
+        try:
+            chain = [memory_id] + [a["memory_id"] for a in activated[:5]]
+            reinforce_edges(database, chain, boost=0.05)
+        except Exception:
+            pass
+
+    return [MemoryResponse(**r) for r in results]
 
 
 @router.patch("/memories/{memory_id}", response_model=MemoryResponse)
@@ -196,9 +249,9 @@ async def search_unified(
     Supports pagination via offset/limit for infinite scroll.
     """
     t0 = time.time()
-    # Pass offset through to SQL so infinite scroll can reach all pages.
-    # max_per_source = page size; a separate COUNT gives the true total.
-    raw = unified_search_fn(query=q, max_per_source=limit, offset=offset)
+    # Fetch enough for the requested page
+    fetch_size = min(offset + limit + 20, 300)
+    raw = unified_search_fn(query=q, max_per_source=fetch_size)
 
     # Apply optional source/type filter
     if source:
@@ -209,6 +262,8 @@ async def search_unified(
         ]
 
     total = raw.get("total", len(raw["results"]))
+    # Paginate
+    raw["results"] = raw["results"][offset:offset + limit]
     raw["latency_ms"] = int((time.time() - t0) * 1000)
 
     return UnifiedSearchResponse(
@@ -288,4 +343,23 @@ async def ingest_recent(
         db=database,
         max_files=max_files,
     )
+    return result
+
+
+# ─── Memory Maintenance ───
+
+@router.post("/decay")
+async def run_decay():
+    """Run memory decay cycle: score, archive low-score, mark decayed."""
+    database = get_db()
+    result = await run_decay_cycle(db=database)
+    return result
+
+
+@router.post("/consolidate")
+async def run_consolidate():
+    """Consolidate semantically similar memories to reduce bloat."""
+    database = get_db()
+    qdrant_store = get_qdrant()
+    result = consolidate_memories(db=database, qdrant=qdrant_store)
     return result

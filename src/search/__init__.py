@@ -115,7 +115,7 @@ def _format_memory_hit(m: dict) -> dict:
     }
 
 
-def unified_search(query: str, max_per_source: int = 30, offset: int = 0) -> dict[str, Any]:
+def unified_search(query: str, max_per_source: int = 30) -> dict[str, Any]:
     """Search structured memories (SQLite FTS5) + mem0 vector.
 
     Returns:
@@ -136,8 +136,8 @@ def unified_search(query: str, max_per_source: int = 30, offset: int = 0) -> dic
         db.init_schema()
         total_count = db.conn.execute("SELECT COUNT(*) FROM memories").fetchone()[0]
         rows = db.conn.execute(
-            "SELECT * FROM memories ORDER BY created_at DESC LIMIT ? OFFSET ?",
-            (max_per_source, offset),
+            "SELECT * FROM memories ORDER BY created_at DESC LIMIT ?",
+            (max_per_source,),
         ).fetchall()
         memory_hits = [db._row_to_dict(r) for r in rows]
 

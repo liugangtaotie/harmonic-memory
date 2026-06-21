@@ -121,6 +121,9 @@ class QualityConfig:
 class LimitsConfig:
     max_per_batch: int = 50
     max_transcript_chars: int = 50000
+    max_active_memories: int = 2000
+    max_db_mb: int = 50
+    aggressive_decay_threshold: int = 1500
 
 
 @dataclass
@@ -151,6 +154,16 @@ class LoggingConfig:
 
 
 @dataclass
+class NeuralConfig:
+    auto_link_threshold: float = 0.75
+    max_auto_links: int = 5
+    spread_max_depth: int = 3
+    spread_decay_rate: float = 0.6
+    spread_max_results: int = 20
+    spread_min_activation: float = 0.05
+
+
+@dataclass
 class HarmonicConfig:
     server: ServerConfig = field(default_factory=ServerConfig)
     storage: StorageConfig = field(default_factory=StorageConfig)
@@ -159,6 +172,7 @@ class HarmonicConfig:
     ingestion: IngestionConfig = field(default_factory=IngestionConfig)
     search: SearchConfig = field(default_factory=SearchConfig)
     logging: LoggingConfig = field(default_factory=LoggingConfig)
+    neural: NeuralConfig = field(default_factory=NeuralConfig)
 
 
 def load_config(path: str | None = None) -> HarmonicConfig:
@@ -225,6 +239,9 @@ def _dict_to_config(d: dict) -> HarmonicConfig:
 
     if "logging" in d:
         cfg.logging = LoggingConfig(**d["logging"])
+
+    if "neural" in d:
+        cfg.neural = NeuralConfig(**d["neural"])
 
     return cfg
 

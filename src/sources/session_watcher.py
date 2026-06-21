@@ -160,7 +160,10 @@ async def ingest_recent_sessions(
         filekey = filepath.replace("\\", "/")
 
         # Skip if already ingested at this mtime
-        if tracker.get(filekey) == mtime:
+        prev = tracker.get(filekey)
+        if isinstance(prev, dict) and prev.get("mtime") == mtime:
+            continue
+        if prev == mtime:  # legacy format
             continue
 
         # Skip if file was modified too recently (might still be writing)
@@ -169,13 +172,18 @@ async def ingest_recent_sessions(
 
         file_size = os.path.getsize(filepath)
         # Skip empty/small files
-        if file_size < 200:
-            tracker[filekey] = mtime
+        if file_size < 500:
+            tracker[filekey] = {"mtime": mtime, "size": file_size}
+            continue
+
+        # Also skip if file size hasn't changed significantly
+        if isinstance(prev, dict) and prev.get("size", 0) == file_size:
+            tracker[filekey] = {"mtime": mtime, "size": file_size}
             continue
 
         text = _extract_conversation_text(filepath)
         if not text or len(text.strip()) < 100:
-            tracker[filekey] = mtime
+            tracker[filekey] = {"mtime": mtime, "size": file_size}
             continue
 
         filename = os.path.basename(filepath)
@@ -191,7 +199,7 @@ async def ingest_recent_sessions(
             )
             total_memories += result.get("memories_created", 0)
             files_ingested += 1
-            tracker[filekey] = mtime
+            tracker[filekey] = {"mtime": mtime, "size": file_size}
             processed += 1
         except Exception as e:
             logger.error(f"Ingestion failed for {filename}: {e}")

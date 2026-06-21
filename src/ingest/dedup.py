@@ -68,3 +68,26 @@ async def find_similar(
         limit=limit,
         score_threshold=threshold,
     )
+
+
+async def find_similar_by_vector(
+    embedding: list[float],
+    qdrant_client,
+    limit: int = 5,
+    threshold: float = 0.75,
+) -> list[dict]:
+    """Find semantically similar memories using a pre-computed embedding.
+
+    Avoids recomputing the embedding when it's already available
+    from the ingest pipeline. Used for auto-linking.
+
+    Returns list of {id, score, payload} dicts.
+    """
+    if not embedding:
+        return []
+
+    return await qdrant_client.search(
+        vector=embedding,
+        limit=limit,
+        score_threshold=threshold,
+    )

@@ -51,13 +51,17 @@ lifecycle:
 
 ingestion:
   dedup:
-    vector_threshold: 0.92
+    vector_threshold: 0.94
   quality:
     min_confidence: 0.4
     min_importance: 0.2
   limits:
     max_per_batch: 50
     max_transcript_chars: 50000
+  storage_limits:
+    max_active_memories: 2000
+    max_db_mb: 50
+    aggressive_decay_threshold: 1500
 
 search:
   hybrid:
@@ -65,6 +69,14 @@ search:
     vector_weight: 0.7
     fusion_k: 60
   max_results: 500
+
+neural:
+  auto_link_threshold: 0.75
+  max_auto_links: 5
+  spread_max_depth: 3
+  spread_decay_rate: 0.6
+  spread_max_results: 20
+  spread_min_activation: 0.05
 
 logging:
   level: "INFO"

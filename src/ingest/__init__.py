@@ -1,5 +1,6 @@
 """Ingestion pipeline — extract, classify, embed, score, dedup, store."""
 
+import hashlib
 import logging
 import time
 from datetime import datetime, timezone
@@ -12,9 +13,14 @@ from .extractor import extract_memories
 from .classifier import classify_batch
 from .embedder import embed_texts
 from .scorer import quality_score, importance_estimate
-from .dedup import is_duplicate
+from .dedup import is_duplicate, find_similar_by_vector
 
 logger = logging.getLogger(__name__)
+
+
+def _content_hash(content: str) -> str:
+    """MD5 hash of normalized content for exact dedup."""
+    return hashlib.md5(content.strip().lower().encode()).hexdigest()
 
 
 async def ingest(
@@ -84,6 +90,15 @@ async def ingest(
     embeddings = await embed_texts(contents)
 
     # Stage 4: Dedup and store
+    # Load existing content hashes for fast exact dedup
+    existing_hashes = set()
+    try:
+        rows = db.conn.execute("SELECT content FROM memories").fetchall()
+        for r in rows:
+            existing_hashes.add(_content_hash(r["content"]))
+    except Exception:
+        pass
+
     created = 0
     duplicates = 0
     rejected = 0
@@ -95,11 +110,17 @@ async def ingest(
             rejected += 1
             continue
 
-        # Dedup check
+        # Exact content hash dedup (fast)
+        ch = _content_hash(mem["content"])
+        if ch in existing_hashes:
+            duplicates += 1
+            continue
+        existing_hashes.add(ch)
+
+        # Vector semantic dedup check
         is_dup, existing_id = await is_duplicate(mem["content"], qdrant)
         if is_dup:
             duplicates += 1
-            # Update access count on existing memory
             if existing_id:
                 db.record_access(existing_id)
             continue
@@ -137,6 +158,33 @@ async def ingest(
         memory_id = db.insert_memory(memory_dict)
         memory_ids.append(memory_id)
         created += 1
+
+        # Auto-link: connect this new memory to similar existing ones
+        try:
+            related = await find_similar_by_vector(
+                embedding=embeddings[i],
+                qdrant_client=qdrant,
+                limit=config.neural.max_auto_links,
+                threshold=config.neural.auto_link_threshold,
+            )
+            for rel in related:
+                if rel["id"] == memory_id:
+                    continue
+                score = rel["score"]
+                if score >= 0.92:
+                    rel_type = "extends"
+                elif score >= 0.85:
+                    rel_type = "supports"
+                else:
+                    rel_type = "references"
+                db.add_edge(
+                    source_id=memory_id,
+                    target_id=rel["id"],
+                    relation_type=rel_type,
+                    weight=score,
+                )
+        except Exception:
+            pass  # Best-effort linking; don't block ingestion
 
     total_ms = int((time.time() - start_time) * 1000)
     db.update_ingestion(log_id, "success", extracted_count=created)

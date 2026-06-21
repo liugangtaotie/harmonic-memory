@@ -71,7 +71,7 @@ search:
   max_results: 500
 
 neural:
-  auto_link_threshold: 0.75
+  auto_link_threshold: 0.55
   max_auto_links: 5
   spread_max_depth: 3
   spread_decay_rate: 0.6

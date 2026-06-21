@@ -84,9 +84,9 @@ class MemoryQdrant:
     ) -> list[dict]:
         """Search for similar vectors. Returns list of {id, score, payload}."""
         try:
-            results: list[ScoredPoint] = self.client.search(
+            results = self.client.query_points(
                 collection_name=self.collection,
-                query_vector=vector,
+                query=vector,
                 limit=limit,
                 score_threshold=score_threshold,
             )
@@ -96,7 +96,7 @@ class MemoryQdrant:
                     "score": r.score,
                     "payload": r.payload or {},
                 }
-                for r in results
+                for r in results.points
             ]
         except Exception:
             return []
@@ -108,15 +108,16 @@ class MemoryQdrant:
     ) -> list[list[dict]]:
         """Batch search for multiple query vectors."""
         try:
+            searches = [
+                models.SearchRequest(
+                    vector=v,
+                    limit=limit,
+                )
+                for v in vectors
+            ]
             results = self.client.search_batch(
                 collection_name=self.collection,
-                requests=[
-                    {
-                        "vector": v,
-                        "limit": limit,
-                    }
-                    for v in vectors
-                ],
+                requests=searches,
             )
             return [
                 [

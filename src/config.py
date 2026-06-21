@@ -155,7 +155,7 @@ class LoggingConfig:
 
 @dataclass
 class NeuralConfig:
-    auto_link_threshold: float = 0.75
+    auto_link_threshold: float = 0.55
     max_auto_links: int = 5
     spread_max_depth: int = 3
     spread_decay_rate: float = 0.6
